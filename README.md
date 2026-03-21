@@ -50,12 +50,16 @@ Create an account at [developers.airtel.co.tz](https://developers.airtel.co.tz/u
 ### 2. Collect money from a subscriber
 
 ```python
+from dotenv import load_dotenv
+import os
 from pyairtel import AirtelMoney
 
+load_dotenv()
+
 airtel = AirtelMoney(
-    client_id="your-client-id",
-    client_secret="your-client-secret",
-    sandbox=True,          # set False for production
+    client_id=os.environ["AIRTEL_CLIENT_ID"],
+    client_secret=os.environ["AIRTEL_CLIENT_SECRET"],
+    sandbox=os.getenv("AIRTEL_SANDBOX", "true").lower() == "true",       # set False for production
 )
 
 response = airtel.collect(
@@ -126,6 +130,38 @@ if status.is_successful:
 | Base URL | `https://openapiuat.airtel.africa` | `https://openapi.airtel.africa` |
 
 ---
+
+## Credentials & Environment Variables
+
+Never hardcode credentials in your code. Copy `.env.example` to `.env` and fill in your values:
+```bash
+cp .env.example .env
+```
+
+`.env`:
+```bash
+AIRTEL_CLIENT_ID=your-client-id-here
+AIRTEL_CLIENT_SECRET=your-client-secret-here
+AIRTEL_SANDBOX=true
+AIRTEL_PUBLIC_KEY_PATH=airtel_pub.pem   # disbursement only
+```
+
+Then load it in your project:
+```python
+from dotenv import load_dotenv 
+import os
+from pyairtel import AirtelMoney
+
+load_dotenv()
+
+airtel = AirtelMoney(
+    client_id=os.environ["AIRTEL_CLIENT_ID"],
+    client_secret=os.environ["AIRTEL_CLIENT_SECRET"],
+    sandbox=os.getenv("AIRTEL_SANDBOX", "true").lower() == "true",
+)
+```
+
+> ⚠️ `.env` and `*.pem` are in `.gitignore` — never commit them.
 
 ## Error Handling
 
@@ -206,6 +242,9 @@ pip install -e ".[dev]"
 
 # Also install encryption support for disbursement tests
 pip install -e ".[dev,encryption]"
+
+# install from requirements.txt
+pip install -r requirements.txt
 ```
 
 ### 4. Fix lint errors automatically
