@@ -1,0 +1,1052 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>pyairtel — Airtel Money Python SDK</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Space+Mono:ital,wght@0,400;0,700;1,400&family=Syne:wght@400;600;700;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:        #0a0a0f;
+      --bg2:       #0f0f18;
+      --bg3:       #13131e;
+      --border:    #1e1e2e;
+      --red:       #e8294a;
+      --red-dim:   #a01d34;
+      --red-glow:  rgba(232,41,74,0.15);
+      --text:      #e8e8f0;
+      --muted:     #6b6b88;
+      --code-bg:   #0d0d16;
+      --green:     #00c98d;
+      --amber:     #f5a623;
+    }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+
+    /* ── NOISE OVERLAY ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)' opacity='0.04'/%3E%3C/svg%3E");
+      pointer-events: none;
+      z-index: 0;
+      opacity: 0.5;
+    }
+
+    /* ── GRID BACKGROUND ── */
+    .grid-bg {
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── NAV ── */
+    nav {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 100;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 48px;
+      background: rgba(10,10,15,0.85);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .nav-logo {
+      font-family: 'Space Mono', monospace;
+      font-size: 1rem;
+      font-weight: 700;
+      color: var(--text);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .nav-logo .dot {
+      width: 8px; height: 8px;
+      background: var(--red);
+      border-radius: 50%;
+      display: inline-block;
+      box-shadow: 0 0 8px var(--red);
+      animation: pulse 2s ease-in-out infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50%       { opacity: 0.5; transform: scale(0.8); }
+    }
+
+    .nav-links {
+      display: flex;
+      gap: 32px;
+      list-style: none;
+    }
+
+    .nav-links a {
+      color: var(--muted);
+      text-decoration: none;
+      font-size: 0.85rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      transition: color 0.2s;
+    }
+
+    .nav-links a:hover { color: var(--text); }
+
+    /* ── HERO ── */
+    .hero {
+      position: relative;
+      z-index: 1;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 120px 24px 80px;
+      overflow: hidden;
+    }
+
+    .hero-glow {
+      position: absolute;
+      top: 30%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 700px;
+      height: 400px;
+      background: radial-gradient(ellipse at center, rgba(232,41,74,0.12) 0%, transparent 70%);
+      pointer-events: none;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(232,41,74,0.1);
+      border: 1px solid rgba(232,41,74,0.3);
+      border-radius: 999px;
+      padding: 6px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--red);
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      margin-bottom: 32px;
+      animation: fadeDown 0.6s ease both;
+    }
+
+    .hero h1 {
+      font-size: clamp(3rem, 8vw, 6.5rem);
+      font-weight: 800;
+      line-height: 0.95;
+      letter-spacing: -0.03em;
+      margin-bottom: 12px;
+      animation: fadeDown 0.7s ease 0.1s both;
+    }
+
+    .hero h1 .accent { color: var(--red); }
+
+    .hero-sub {
+      font-family: 'Space Mono', monospace;
+      font-size: clamp(0.85rem, 2vw, 1rem);
+      color: var(--muted);
+      margin-bottom: 48px;
+      letter-spacing: 0.04em;
+      animation: fadeDown 0.7s ease 0.2s both;
+    }
+
+    .hero-buttons {
+      display: flex;
+      gap: 16px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-bottom: 64px;
+      animation: fadeDown 0.7s ease 0.3s both;
+    }
+
+    .btn-primary {
+      background: var(--red);
+      color: #fff;
+      border: none;
+      padding: 14px 32px;
+      border-radius: 4px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: background 0.2s, transform 0.15s, box-shadow 0.2s;
+      box-shadow: 0 0 24px rgba(232,41,74,0.3);
+    }
+
+    .btn-primary:hover {
+      background: #ff3356;
+      transform: translateY(-2px);
+      box-shadow: 0 0 36px rgba(232,41,74,0.5);
+    }
+
+    .btn-secondary {
+      background: transparent;
+      color: var(--text);
+      border: 1px solid var(--border);
+      padding: 14px 32px;
+      border-radius: 4px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 700;
+      cursor: pointer;
+      text-decoration: none;
+      letter-spacing: 0.05em;
+      transition: border-color 0.2s, background 0.2s, transform 0.15s;
+    }
+
+    .btn-secondary:hover {
+      border-color: var(--muted);
+      background: rgba(255,255,255,0.03);
+      transform: translateY(-2px);
+    }
+
+    /* ── INSTALL STRIP ── */
+    .install-strip {
+      display: inline-flex;
+      align-items: center;
+      gap: 16px;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      padding: 14px 24px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.9rem;
+      animation: fadeDown 0.7s ease 0.4s both;
+    }
+
+    .install-strip .prompt { color: var(--red); }
+    .install-strip .cmd   { color: var(--text); }
+
+    .copy-btn {
+      background: none;
+      border: 1px solid var(--border);
+      color: var(--muted);
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+
+    .copy-btn:hover { border-color: var(--red); color: var(--red); }
+
+    /* ── BADGES ROW ── */
+    .badges-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      justify-content: center;
+      margin-top: 40px;
+      animation: fadeDown 0.7s ease 0.5s both;
+    }
+
+    .badges-row img { height: 20px; }
+
+    @keyframes fadeDown {
+      from { opacity: 0; transform: translateY(-16px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── SECTION ── */
+    section {
+      position: relative;
+      z-index: 1;
+      max-width: 1100px;
+      margin: 0 auto;
+      padding: 80px 24px;
+    }
+
+    .section-label {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--red);
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 16px;
+    }
+
+    .section-title {
+      font-size: clamp(1.8rem, 4vw, 2.8rem);
+      font-weight: 800;
+      letter-spacing: -0.02em;
+      margin-bottom: 48px;
+      line-height: 1.1;
+    }
+
+    /* ── FEATURES GRID ── */
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .feature-card {
+      background: var(--bg2);
+      padding: 32px 28px;
+      transition: background 0.2s;
+    }
+
+    .feature-card:hover { background: var(--bg3); }
+
+    .feature-icon {
+      font-size: 1.6rem;
+      margin-bottom: 16px;
+      display: block;
+    }
+
+    .feature-card h3 {
+      font-size: 1rem;
+      font-weight: 700;
+      margin-bottom: 8px;
+      letter-spacing: -0.01em;
+    }
+
+    .feature-card p {
+      font-size: 0.875rem;
+      color: var(--muted);
+      line-height: 1.6;
+    }
+
+    /* ── CODE BLOCKS ── */
+    .code-section {
+      background: var(--bg2);
+      border: 1px solid var(--border);
+      border-radius: 0;
+    }
+
+    .code-tabs {
+      display: flex;
+      border-bottom: 1px solid var(--border);
+      overflow-x: auto;
+    }
+
+    .code-tab {
+      padding: 12px 24px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+      cursor: pointer;
+      border: none;
+      background: none;
+      border-bottom: 2px solid transparent;
+      white-space: nowrap;
+      transition: all 0.2s;
+      letter-spacing: 0.05em;
+    }
+
+    .code-tab:hover { color: var(--text); }
+    .code-tab.active { color: var(--red); border-bottom-color: var(--red); }
+
+    .code-panel { display: none; }
+    .code-panel.active { display: block; }
+
+    pre {
+      background: var(--code-bg);
+      padding: 28px;
+      overflow-x: auto;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8rem;
+      line-height: 1.8;
+    }
+
+    .kw  { color: #e879a0; }
+    .fn  { color: #61dafb; }
+    .str { color: var(--green); }
+    .cm  { color: var(--muted); font-style: italic; }
+    .num { color: var(--amber); }
+    .cls { color: #ffd700; }
+    .var { color: var(--text); }
+
+    /* ── API REFERENCE TABLE ── */
+    .api-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.875rem;
+    }
+
+    .api-table th {
+      text-align: left;
+      padding: 12px 16px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      letter-spacing: 0.1em;
+      text-transform: uppercase;
+      color: var(--muted);
+      border-bottom: 1px solid var(--border);
+    }
+
+    .api-table td {
+      padding: 14px 16px;
+      border-bottom: 1px solid var(--border);
+      vertical-align: top;
+    }
+
+    .api-table tr:last-child td { border-bottom: none; }
+    .api-table tr:hover td { background: var(--bg3); }
+
+    .tag {
+      display: inline-block;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      padding: 2px 8px;
+      border-radius: 2px;
+      border: 1px solid;
+    }
+
+    .tag-get    { color: var(--green);  border-color: var(--green);  background: rgba(0,201,141,0.08); }
+    .tag-post   { color: var(--amber);  border-color: var(--amber);  background: rgba(245,166,35,0.08); }
+    .tag-delete { color: var(--red);    border-color: var(--red);    background: rgba(232,41,74,0.08); }
+
+    code {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.8em;
+      background: var(--code-bg);
+      border: 1px solid var(--border);
+      padding: 2px 6px;
+      border-radius: 3px;
+      color: var(--green);
+    }
+
+    /* ── LOCAL DEV SECTION ── */
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .step {
+      display: grid;
+      grid-template-columns: 56px 1fr;
+      background: var(--bg2);
+      transition: background 0.2s;
+    }
+
+    .step:hover { background: var(--bg3); }
+
+    .step-num {
+      display: flex;
+      align-items: flex-start;
+      justify-content: center;
+      padding: 24px 0 0;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.72rem;
+      color: var(--red);
+      font-weight: 700;
+      letter-spacing: 0.1em;
+    }
+
+    .step-body {
+      padding: 24px 28px 24px 0;
+      border-left: 1px solid var(--border);
+    }
+
+    .step-body h4 {
+      font-size: 0.95rem;
+      font-weight: 700;
+      margin-bottom: 12px;
+    }
+
+    .step-body pre {
+      border-radius: 4px;
+      font-size: 0.78rem;
+      padding: 16px 20px;
+    }
+
+    /* ── ESB TABLE ── */
+    .esb-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 2px;
+      background: var(--border);
+      border: 1px solid var(--border);
+    }
+
+    .esb-card {
+      background: var(--bg2);
+      padding: 20px 24px;
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+      transition: background 0.2s;
+    }
+
+    .esb-card:hover { background: var(--bg3); }
+
+    .esb-code-badge {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--red);
+      background: rgba(232,41,74,0.08);
+      border: 1px solid rgba(232,41,74,0.25);
+      padding: 4px 8px;
+      border-radius: 3px;
+      white-space: nowrap;
+      flex-shrink: 0;
+      margin-top: 2px;
+    }
+
+    .esb-msg {
+      font-size: 0.85rem;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+
+    .esb-msg strong {
+      display: block;
+      color: var(--text);
+      font-weight: 600;
+      margin-bottom: 2px;
+      font-size: 0.875rem;
+    }
+
+    /* ── DIVIDER ── */
+    .divider {
+      border: none;
+      border-top: 1px solid var(--border);
+      margin: 0;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      position: relative;
+      z-index: 1;
+      border-top: 1px solid var(--border);
+      padding: 40px 48px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: gap;
+      gap: 16px;
+    }
+
+    footer p {
+      font-family: 'Space Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--muted);
+    }
+
+    footer a { color: var(--red); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    .footer-links {
+      display: flex;
+      gap: 24px;
+    }
+
+    /* ── RESPONSIVE ── */
+    @media (max-width: 640px) {
+      nav { padding: 16px 20px; }
+      .nav-links { display: none; }
+      footer { padding: 32px 20px; flex-direction: column; align-items: flex-start; }
+    }
+  </style>
+</head>
+<body>
+
+<div class="grid-bg"></div>
+
+<!-- NAV -->
+<nav>
+  <a href="#" class="nav-logo">
+    <span class="dot"></span>
+    pyairtel
+  </a>
+  <ul class="nav-links">
+    <li><a href="#features">Features</a></li>
+    <li><a href="#quickstart">Quickstart</a></li>
+    <li><a href="#api">API</a></li>
+    <li><a href="#local">Local Dev</a></li>
+    <li><a href="#errors">Errors</a></li>
+    <li><a href="https://github.com/ronaldgosso/pyairtel" target="_blank">GitHub ↗</a></li>
+  </ul>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-glow"></div>
+
+  <div class="badge">
+    <span>●</span> Tanzania · Airtel Money Open API
+  </div>
+
+  <h1>
+    <span class="accent">py</span>airtel
+  </h1>
+
+  <p class="hero-sub">
+    Python SDK for Airtel Money Tanzania &mdash; Collection, Disbursement &amp; Refunds
+  </p>
+
+  <div class="hero-buttons">
+    <a href="#quickstart" class="btn-primary">Get Started</a>
+    <a href="https://github.com/ronaldgosso/pyairtel" target="_blank" class="btn-secondary">View on GitHub</a>
+  </div>
+
+  <div class="install-strip">
+    <span class="prompt">$</span>
+    <span class="cmd" id="install-cmd">pip install pyairtel</span>
+    <button class="copy-btn" onclick="copyInstall()">copy</button>
+  </div>
+
+  <div class="badges-row">
+    <img src="https://img.shields.io/pypi/v/pyairtel?color=e8294a&labelColor=0a0a0f&style=flat-square" alt="PyPI" />
+    <img src="https://img.shields.io/pypi/pyversions/pyairtel?color=6b6b88&labelColor=0a0a0f&style=flat-square" alt="Python" />
+    <img src="https://img.shields.io/github/actions/workflow/status/ronaldgosso/pyairtel/ci.yml?color=00c98d&labelColor=0a0a0f&style=flat-square&label=CI" alt="CI" />
+    <img src="https://img.shields.io/badge/License-MIT-6b6b88?labelColor=0a0a0f&style=flat-square" alt="License" />
+  </div>
+</div>
+
+<hr class="divider" />
+
+<!-- FEATURES -->
+<section id="features">
+  <p class="section-label">What's included</p>
+  <h2 class="section-title">Everything you need to<br/>accept &amp; send mobile money</h2>
+
+  <div class="features-grid">
+    <div class="feature-card">
+      <span class="feature-icon">🔐</span>
+      <h3>OAuth2 Authentication</h3>
+      <p>Automatic token acquisition and refresh. Your credentials stay safe — tokens are managed internally and renewed 60 seconds before expiry.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📲</span>
+      <h3>USSD Push Collection</h3>
+      <p>Request payments from subscribers. A prompt is sent to their phone — they enter their Airtel Money PIN to approve. No redirects needed.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">✅</span>
+      <h3>Transaction Status Polling</h3>
+      <p>Poll transaction status with typed responses: <code>is_successful</code>, <code>is_pending</code>, <code>is_failed</code>. No raw string parsing required.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">💸</span>
+      <h3>Disbursement (B2C)</h3>
+      <p>Transfer money directly to any Airtel Money wallet. Includes payee validation before sending so you never send to an invalid number.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">↩️</span>
+      <h3>Refunds</h3>
+      <p>Reverse a completed collection using Airtel's internal <code>airtel_money_id</code>. One line of code — no extra configuration needed.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔒</span>
+      <h3>RSA PIN Encryption</h3>
+      <p>Disbursements require your merchant PIN encrypted with Airtel's RSA public key. Handled automatically via <code>pycryptodome</code>.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">📞</span>
+      <h3>Phone Normalisation</h3>
+      <p>Pass numbers in any format — <code>+255…</code>, <code>0…</code>, or <code>255…</code>. Automatically normalised to the 12-digit format Airtel expects.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">⚠️</span>
+      <h3>ESB Error Decoding</h3>
+      <p>All 9 real Airtel Tanzania ESB error codes mapped to human-readable messages. <code>CollectionError.esb_code</code> and <code>.esb_message</code> on every failure.</p>
+    </div>
+    <div class="feature-card">
+      <span class="feature-icon">🧪</span>
+      <h3>Sandbox &amp; Production</h3>
+      <p>Toggle between UAT sandbox and live production with a single <code>sandbox=True/False</code> flag. Same code, different environment.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- QUICKSTART -->
+<section id="quickstart">
+  <p class="section-label">Code examples</p>
+  <h2 class="section-title">From zero to<br/>first transaction</h2>
+
+  <div class="code-section">
+    <div class="code-tabs">
+      <button class="code-tab active" onclick="showTab('collect')">Collect Money</button>
+      <button class="code-tab" onclick="showTab('status')">Check Status</button>
+      <button class="code-tab" onclick="showTab('refund')">Refund</button>
+      <button class="code-tab" onclick="showTab('disburse')">Disbursement</button>
+      <button class="code-tab" onclick="showTab('errors')">Error Handling</button>
+    </div>
+
+    <div id="tab-collect" class="code-panel active">
+      <pre><span class="kw">from</span> <span class="var">pyairtel</span> <span class="kw">import</span> <span class="cls">AirtelMoney</span>
+
+<span class="cm"># Initialise — sandbox=True for testing, False for production</span>
+<span class="var">airtel</span> = <span class="cls">AirtelMoney</span>(
+    <span class="var">client_id</span>=<span class="str">"your-client-id"</span>,
+    <span class="var">client_secret</span>=<span class="str">"your-client-secret"</span>,
+    <span class="var">sandbox</span>=<span class="kw">True</span>,
+)
+
+<span class="cm"># Send a USSD push — subscriber gets a PIN prompt on their phone</span>
+<span class="var">resp</span> = <span class="var">airtel</span>.<span class="fn">collect</span>(
+    <span class="var">phone</span>=<span class="str">"+255681219610"</span>,   <span class="cm"># +255, 0, or 255 formats all accepted</span>
+    <span class="var">amount</span>=<span class="num">5000</span>,              <span class="cm"># Tanzanian Shillings</span>
+    <span class="var">reference</span>=<span class="str">"invoice-42"</span>,
+)
+
+<span class="fn">print</span>(<span class="var">resp</span>.<span class="var">transaction_id</span>)  <span class="cm"># TXN-20240101120000-AB12CD34</span>
+<span class="fn">print</span>(<span class="var">resp</span>.<span class="var">is_initiated</span>)     <span class="cm"># True</span></pre>
+    </div>
+
+    <div id="tab-status" class="code-panel">
+      <pre><span class="kw">import</span> <span class="var">time</span>
+
+<span class="cm"># Wait for the subscriber to approve on their phone</span>
+<span class="var">time</span>.<span class="fn">sleep</span>(<span class="num">15</span>)
+
+<span class="var">status</span> = <span class="var">airtel</span>.<span class="fn">get_collection_status</span>(<span class="var">resp</span>.<span class="var">transaction_id</span>)
+
+<span class="kw">if</span> <span class="var">status</span>.<span class="var">is_successful</span>:
+    <span class="fn">print</span>(<span class="str">"✅ Payment confirmed!"</span>, <span class="var">status</span>.<span class="var">airtel_money_id</span>)
+
+<span class="kw">elif</span> <span class="var">status</span>.<span class="var">is_pending</span>:
+    <span class="fn">print</span>(<span class="str">"⏳ Subscriber hasn't approved yet..."</span>)
+
+<span class="kw">elif</span> <span class="var">status</span>.<span class="var">is_failed</span>:
+    <span class="fn">print</span>(<span class="str">"❌ Payment failed:"</span>, <span class="var">status</span>.<span class="var">message</span>)
+
+<span class="cm"># Transaction status codes:
+# TS  — Transaction Successful
+# TIP — Transaction In Progress
+# TF  — Transaction Failed
+# TA  — Transaction Ambiguous</span></pre>
+    </div>
+
+    <div id="tab-refund" class="code-panel">
+      <pre><span class="cm"># Use airtel_money_id from a successful collection status</span>
+<span class="var">status</span> = <span class="var">airtel</span>.<span class="fn">get_collection_status</span>(<span class="var">transaction_id</span>)
+
+<span class="kw">if</span> <span class="var">status</span>.<span class="var">is_successful</span>:
+    <span class="var">refund</span> = <span class="var">airtel</span>.<span class="fn">refund</span>(<span class="var">status</span>.<span class="var">airtel_money_id</span>)
+
+    <span class="kw">if</span> <span class="var">refund</span>.<span class="var">is_successful</span>:
+        <span class="fn">print</span>(<span class="str">"↩️  Refund initiated:"</span>, <span class="var">refund</span>.<span class="var">message</span>)
+    <span class="kw">else</span>:
+        <span class="fn">print</span>(<span class="str">"Refund failed:"</span>, <span class="var">refund</span>.<span class="var">message</span>)</pre>
+    </div>
+
+    <div id="tab-disburse" class="code-panel">
+      <pre><span class="cm"># Step 1 — check the payee can receive money</span>
+<span class="var">check</span> = <span class="var">airtel</span>.<span class="fn">validate_payee</span>(<span class="str">"+255754123456"</span>)
+
+<span class="kw">if</span> <span class="kw">not</span> <span class="var">check</span>.<span class="var">is_valid</span>:
+    <span class="fn">print</span>(<span class="str">"Cannot receive money:"</span>, <span class="var">check</span>.<span class="var">message</span>)
+<span class="kw">else</span>:
+    <span class="cm"># Step 2 — transfer money (PIN is RSA-encrypted automatically)</span>
+    <span class="var">result</span> = <span class="var">airtel</span>.<span class="fn">transfer</span>(
+        <span class="var">phone</span>=<span class="str">"+255681219610"</span>,
+        <span class="var">amount</span>=<span class="num">2000</span>,
+        <span class="var">pin</span>=<span class="str">"1234"</span>,                  <span class="cm"># merchant PIN — encrypted before sending</span>
+        <span class="var">public_key_pem</span>=<span class="fn">open</span>(<span class="str">"airtel_pub.pem"</span>).<span class="fn">read</span>(),
+        <span class="var">payer_first_name</span>=<span class="str">"Ronald"</span>,
+        <span class="var">payer_last_name</span>=<span class="str">"Gosso"</span>,
+        <span class="var">reference</span>=<span class="str">"payout-001"</span>,
+    )
+
+    <span class="fn">print</span>(<span class="var">result</span>.<span class="var">is_successful</span>, <span class="var">result</span>.<span class="var">airtel_money_id</span>)</pre>
+    </div>
+
+    <div id="tab-errors" class="code-panel">
+      <pre><span class="kw">from</span> <span class="var">pyairtel</span> <span class="kw">import</span> <span class="cls">AirtelMoney</span>, <span class="fn">decode_esb_error</span>
+<span class="kw">from</span> <span class="var">pyairtel.exceptions</span> <span class="kw">import</span> (
+    <span class="cls">AuthenticationError</span>,
+    <span class="cls">CollectionError</span>,
+    <span class="cls">DisbursementError</span>,
+    <span class="cls">EncryptionError</span>,
+)
+
+<span class="kw">try</span>:
+    <span class="var">resp</span> = <span class="var">airtel</span>.<span class="fn">collect</span>(<span class="var">phone</span>=<span class="str">"+255754123456"</span>, <span class="var">amount</span>=<span class="num">1000</span>, <span class="var">reference</span>=<span class="str">"ref-1"</span>)
+
+<span class="kw">except</span> <span class="cls">AuthenticationError</span> <span class="kw">as</span> <span class="var">e</span>:
+    <span class="fn">print</span>(<span class="str">"Bad credentials:"</span>, <span class="var">e</span>)
+
+<span class="kw">except</span> <span class="cls">CollectionError</span> <span class="kw">as</span> <span class="var">e</span>:
+    <span class="fn">print</span>(<span class="str">"ESB code:"</span>, <span class="var">e</span>.<span class="var">esb_code</span>)      <span class="cm"># e.g. "ESB000014"</span>
+    <span class="fn">print</span>(<span class="str">"Reason:"</span>,   <span class="var">e</span>.<span class="var">esb_message</span>)   <span class="cm"># "Insufficient funds..."</span>
+
+<span class="cm"># Decode any ESB code manually</span>
+<span class="fn">print</span>(<span class="fn">decode_esb_error</span>(<span class="str">"ESB000039"</span>))
+<span class="cm"># → "Transaction timed out. The subscriber did not respond..."</span></pre>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- API REFERENCE -->
+<section id="api">
+  <p class="section-label">API Reference</p>
+  <h2 class="section-title">AirtelMoney methods</h2>
+
+  <div style="background:var(--bg2); border:1px solid var(--border); overflow:hidden;">
+    <table class="api-table">
+      <thead>
+        <tr>
+          <th>Method</th>
+          <th>HTTP</th>
+          <th>Description</th>
+          <th>Returns</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><code>collect(phone, amount, reference)</code></td>
+          <td><span class="tag tag-post">POST</span></td>
+          <td style="color:var(--muted)">Send USSD push payment request to subscriber</td>
+          <td><code>CollectionResponse</code></td>
+        </tr>
+        <tr>
+          <td><code>get_collection_status(transaction_id)</code></td>
+          <td><span class="tag tag-get">GET</span></td>
+          <td style="color:var(--muted)">Poll status of a collection — TS / TIP / TF / TA</td>
+          <td><code>TransactionStatusResponse</code></td>
+        </tr>
+        <tr>
+          <td><code>refund(airtel_money_id)</code></td>
+          <td><span class="tag tag-post">POST</span></td>
+          <td style="color:var(--muted)">Reverse a completed collection transaction</td>
+          <td><code>RefundResponse</code></td>
+        </tr>
+        <tr>
+          <td><code>validate_payee(phone)</code></td>
+          <td><span class="tag tag-get">GET</span></td>
+          <td style="color:var(--muted)">Check if a number is a valid Airtel Money wallet</td>
+          <td><code>ValidationResponse</code></td>
+        </tr>
+        <tr>
+          <td><code>transfer(phone, amount, pin, ...)</code></td>
+          <td><span class="tag tag-post">POST</span></td>
+          <td style="color:var(--muted)">Transfer money from merchant wallet to subscriber</td>
+          <td><code>DisbursementResponse</code></td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- LOCAL DEV -->
+<section id="local">
+  <p class="section-label">Local Development</p>
+  <h2 class="section-title">Run the package locally<br/>step by step</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <h4>Clone the repo</h4>
+        <pre>git clone https://github.com/ronaldgosso/pyairtel.git
+cd pyairtel</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <h4>Create &amp; activate virtual environment</h4>
+        <pre><span class="cm"># Create venv</span>
+python -m venv venv
+
+<span class="cm"># Activate — Linux / Mac</span>
+source venv/bin/activate
+
+<span class="cm"># Activate — Windows</span>
+venv\Scripts\activate
+
+<span class="cm"># Confirm — should show venv path</span>
+which python</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <h4>Install package + dev dependencies</h4>
+        <pre>pip install -e ".[dev]"
+
+<span class="cm"># For disbursement with RSA PIN encryption</span>
+pip install -e ".[dev,encryption]"</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <h4>Fix lint errors automatically</h4>
+        <pre><span class="cm"># Auto-fix ruff issues (imports, whitespace, deprecated types)</span>
+ruff check pyairtel tests --fix --unsafe-fixes
+
+<span class="cm"># Format with black</span>
+black pyairtel tests</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">05</div>
+      <div class="step-body">
+        <h4>Verify full quality gate</h4>
+        <pre><span class="cm"># Linting — should print: All checks passed!</span>
+ruff check pyairtel tests
+
+<span class="cm"># Formatting — should print: X files would be left unchanged</span>
+black --check pyairtel tests
+
+<span class="cm"># Type checking — should print: Success: no issues found</span>
+mypy pyairtel</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">06</div>
+      <div class="step-body">
+        <h4>Run all tests</h4>
+        <pre><span class="cm"># Run all 25 tests with verbose output</span>
+pytest tests/ -v
+
+<span class="cm"># Run a specific test class</span>
+pytest tests/ -v -k "TestCollection"
+
+<span class="cm"># Run a single test</span>
+pytest tests/ -v -k "test_collect_success"</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">07</div>
+      <div class="step-body">
+        <h4>Deactivate venv when done</h4>
+        <pre>deactivate</pre>
+      </div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- ESB ERROR CODES -->
+<section id="errors">
+  <p class="section-label">Error Codes</p>
+  <h2 class="section-title">Airtel Tanzania<br/>ESB error reference</h2>
+
+  <div class="esb-grid">
+    <div class="esb-card">
+      <span class="esb-code-badge">ESB000001</span>
+      <div class="esb-msg"><strong>General Error</strong>Transaction failed — general error. Check credentials and try again.</div>
+    </div>
+    <div class="esb-card">
+      <span class="esb-code-badge">ESB000004</span>
+      <div class="esb-msg"><strong>Service Unavailable</strong>Airtel Money service is temporarily down.</div>
+    </div>
+    <div class="esb-card">
+      <span class="esb-code-badge">ESB000008</span>
+      <div class="esb-msg"><strong>Invalid Transaction</strong>The request parameters are incorrect.</div>
+    </div>
+    <div class="esb-card">
+      <span class="esb-code-badge">ESB000011</span>
+      <div class="esb-msg"><strong>Subscriber Not Found</strong>Phone number is not registered on Airtel Money.</div>
+    </div>
+    <div class="esb-card">
+      <span class="esb-code-badge">ESB000014</span>
+      <div class="esb-msg"><strong>Insufficient Funds</strong>Subscriber's Airtel Money balance is too low.</div>
+    </div>
+    <div class="esb-card">
+      <span class="esb-code-badge">ESB000033</span>
+      <div class="esb-msg"><strong>Transaction Limit Exceeded</strong>Amount is above the subscriber's transaction limit.</div>
+    </div>
+    <div class="esb-card">
+      <span class="esb-code-badge">ESB000036</span>
+      <div class="esb-msg"><strong>Daily Limit Exceeded</strong>Subscriber has reached their daily transaction limit.</div>
+    </div>
+    <div class="esb-card">
+      <span class="esb-code-badge">ESB000039</span>
+      <div class="esb-msg"><strong>Transaction Timed Out</strong>Subscriber did not respond to the USSD prompt in time.</div>
+    </div>
+    <div class="esb-card">
+      <span class="esb-code-badge">ESB000041</span>
+      <div class="esb-msg"><strong>PIN Locked</strong>Too many incorrect PIN attempts by the subscriber.</div>
+    </div>
+    <div class="esb-card">
+      <span class="esb-code-badge">ESB000045</span>
+      <div class="esb-msg"><strong>Duplicate Transaction</strong>A transaction with this ID was already processed.</div>
+    </div>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- FOOTER -->
+<footer>
+  <p>
+    MIT License &nbsp;·&nbsp;
+    Built by <a href="https://github.com/ronaldgosso" target="_blank">Ronald Isack Gosso</a> &nbsp;·&nbsp;
+    Tanzania 🇹🇿
+  </p>
+  <div class="footer-links">
+    <a href="https://github.com/ronaldgosso/pyairtel" target="_blank">GitHub</a>
+    <a href="https://pypi.org/project/pyairtel/" target="_blank">PyPI</a>
+    <a href="https://developers.airtel.africa" target="_blank">Airtel Docs ↗</a>
+  </div>
+</footer>
+
+<script>
+  function showTab(name) {
+    document.querySelectorAll('.code-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.code-tab').forEach(t => t.classList.remove('active'));
+    document.getElementById('tab-' + name).classList.add('active');
+    event.target.classList.add('active');
+  }
+
+  function copyInstall() {
+    navigator.clipboard.writeText('pip install pyairtel').then(() => {
+      const btn = document.querySelector('.copy-btn');
+      btn.textContent = 'copied!';
+      btn.style.color = 'var(--green)';
+      btn.style.borderColor = 'var(--green)';
+      setTimeout(() => {
+        btn.textContent = 'copy';
+        btn.style.color = '';
+        btn.style.borderColor = '';
+      }, 2000);
+    });
+  }
+</script>
+</body>
+</html>
