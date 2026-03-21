@@ -24,7 +24,7 @@ from .exceptions import (
 
 __version__ = "0.1.0"
 __author__ = "Ronald Isack Gosso"
-__email__ = "ronaldgosso@gmail.com" 
+__email__ = "ronaldgosso@gmail.com"
 
 __all__ = [
     "AirtelMoney",
