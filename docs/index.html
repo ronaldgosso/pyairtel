@@ -590,6 +590,7 @@
     <li><a href="#features">Features</a></li>
     <li><a href="#quickstart">Quickstart</a></li>
     <li><a href="#api">API</a></li>
+    <li><a href="#credentials">Credentials</a></li>
     <li><a href="#local">Local Dev</a></li>
     <li><a href="#errors">Errors</a></li>
     <li><a href="https://github.com/ronaldgosso/pyairtel" target="_blank">GitHub ↗</a></li>
@@ -684,7 +685,11 @@
       <h3>Sandbox &amp; Production</h3>
       <p>Toggle between UAT sandbox and live production with a single <code>sandbox=True/False</code> flag. Same code, different environment.</p>
     </div>
-  </div>
+    <div class="feature-card">
+      <span class="feature-icon">🔑</span>
+      <h3>Secure Credentials</h3>
+      <p>Credentials are never hardcoded. Use a <code>.env</code> file locally and environment variables in production — a <code>.env.example</code> template is included in the repo.</p>
+    </div>
 </section>
 
 <hr class="divider" />
@@ -701,6 +706,7 @@
       <button class="code-tab" onclick="showTab('refund')">Refund</button>
       <button class="code-tab" onclick="showTab('disburse')">Disbursement</button>
       <button class="code-tab" onclick="showTab('errors')">Error Handling</button>
+      <button class="code-tab" onclick="showTab('env')">.env Setup</button>
     </div>
 
     <div id="tab-collect" class="code-panel active">
@@ -708,9 +714,9 @@
 
 <span class="cm"># Initialise — sandbox=True for testing, False for production</span>
 <span class="var">airtel</span> = <span class="cls">AirtelMoney</span>(
-    <span class="var">client_id</span>=<span class="str">"your-client-id"</span>,
-    <span class="var">client_secret</span>=<span class="str">"your-client-secret"</span>,
-    <span class="var">sandbox</span>=<span class="kw">True</span>,
+    <span class="var">client_id</span>=<span class="str">os.environ["AIRTEL_CLIENT_ID"]</span>,
+    <span class="var">client_secret</span>=<span class="str">os.environ["AIRTEL_CLIENT_SECRET"]</span>,
+    <span class="var">sandbox</span>=<span class="kw">os.getenv("AIRTEL_SANDBOX", "true").lower() == "true</span>,
 )
 
 <span class="cm"># Send a USSD push — subscriber gets a PIN prompt on their phone</span>
@@ -805,7 +811,33 @@
 <span class="fn">print</span>(<span class="fn">decode_esb_error</span>(<span class="str">"ESB000039"</span>))
 <span class="cm"># → "Transaction timed out. The subscriber did not respond..."</span></pre>
     </div>
-  </div>
+
+    <div id="tab-env" class="code-panel">
+      <pre><span class="cm"># Step 1 — copy the template and fill in your values</span>
+<span class="cm"># cp .env.example .env</span>
+
+<span class="cm"># .env (never commit this file — it's in .gitignore)</span>
+<span class="var">AIRTEL_CLIENT_ID</span>=your-client-id-here
+<span class="var">AIRTEL_CLIENT_SECRET</span>=your-client-secret-here
+<span class="var">AIRTEL_SANDBOX</span>=true
+<span class="var">AIRTEL_PUBLIC_KEY_PATH</span>=airtel_pub.pem  <span class="cm"># disbursement only</span>
+
+<span class="cm"># Step 2 — install python-dotenv</span>
+<span class="cm"># pip install python-dotenv</span>
+
+<span class="cm"># Step 3 — load in your app</span>
+<span class="kw">from</span> <span class="var">dotenv</span> <span class="kw">import</span> <span class="fn">load_dotenv</span>
+<span class="kw">import</span> <span class="var">os</span>
+<span class="kw">from</span> <span class="var">pyairtel</span> <span class="kw">import</span> <span class="cls">AirtelMoney</span>
+
+<span class="fn">load_dotenv</span>()  <span class="cm"># reads .env into environment variables</span>
+
+<span class="var">airtel</span> = <span class="cls">AirtelMoney</span>(
+    <span class="var">client_id</span>=<span class="var">os</span>.<span class="var">environ</span>[<span class="str">"AIRTEL_CLIENT_ID"</span>],
+    <span class="var">client_secret</span>=<span class="var">os</span>.<span class="var">environ</span>[<span class="str">"AIRTEL_CLIENT_SECRET"</span>],
+    <span class="var">sandbox</span>=<span class="var">os</span>.<span class="fn">getenv</span>(<span class="str">"AIRTEL_SANDBOX"</span>, <span class="str">"true"</span>).<span class="fn">lower</span>() == <span class="str">"true"</span>,
+)</pre>
+    </div>
 </section>
 
 <hr class="divider" />
@@ -858,6 +890,81 @@
         </tr>
       </tbody>
     </table>
+  </div>
+</section>
+
+<hr class="divider" />
+
+<!-- CREDENTIALS -->
+<section id="credentials">
+  <p class="section-label">Security</p>
+  <h2 class="section-title">Credentials &amp;<br/>environment variables</h2>
+
+  <div class="steps">
+    <div class="step">
+      <div class="step-num">01</div>
+      <div class="step-body">
+        <h4>Never hardcode credentials</h4>
+        <pre><span class="cm"># ❌ Don't do this</span>
+<span class="var">airtel</span> = <span class="cls">AirtelMoney</span>(<span class="var">client_id</span>=<span class="str">"abc123"</span>, <span class="var">client_secret</span>=<span class="str">"secret"</span>)
+
+<span class="cm"># ✅ Do this instead — load from environment</span>
+<span class="var">airtel</span> = <span class="cls">AirtelMoney</span>(
+    <span class="var">client_id</span>=<span class="var">os</span>.<span class="var">environ</span>[<span class="str">"AIRTEL_CLIENT_ID"</span>],
+    <span class="var">client_secret</span>=<span class="var">os</span>.<span class="var">environ</span>[<span class="str">"AIRTEL_CLIENT_SECRET"</span>],
+)</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">02</div>
+      <div class="step-body">
+        <h4>Copy <code>.env.example</code> → <code>.env</code></h4>
+        <pre>cp .env.example .env</pre>
+        <pre style="margin-top:8px"><span class="cm"># .env — fill in your real values from the Airtel developer portal</span>
+<span class="var">AIRTEL_CLIENT_ID</span>=your-client-id-here
+<span class="var">AIRTEL_CLIENT_SECRET</span>=your-client-secret-here
+<span class="var">AIRTEL_SANDBOX</span>=true
+<span class="var">AIRTEL_PUBLIC_KEY_PATH</span>=airtel_pub.pem  <span class="cm"># disbursement only</span></pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">03</div>
+      <div class="step-body">
+        <h4>Load in your app with <code>python-dotenv</code></h4>
+        <pre>pip install python-dotenv</pre>
+        <pre style="margin-top:8px"><span class="kw">from</span> <span class="var">dotenv</span> <span class="kw">import</span> <span class="fn">load_dotenv</span>
+<span class="kw">import</span> <span class="var">os</span>
+<span class="kw">from</span> <span class="var">pyairtel</span> <span class="kw">import</span> <span class="cls">AirtelMoney</span>
+
+<span class="fn">load_dotenv</span>()
+
+<span class="var">airtel</span> = <span class="cls">AirtelMoney</span>(
+    <span class="var">client_id</span>=<span class="var">os</span>.<span class="var">environ</span>[<span class="str">"AIRTEL_CLIENT_ID"</span>],
+    <span class="var">client_secret</span>=<span class="var">os</span>.<span class="var">environ</span>[<span class="str">"AIRTEL_CLIENT_SECRET"</span>],
+    <span class="var">sandbox</span>=<span class="var">os</span>.<span class="fn">getenv</span>(<span class="str">"AIRTEL_SANDBOX"</span>, <span class="str">"true"</span>).<span class="fn">lower</span>() == <span class="str">"true"</span>,
+)</pre>
+      </div>
+    </div>
+
+    <div class="step">
+      <div class="step-num">04</div>
+      <div class="step-body">
+        <h4>Files that must never be committed</h4>
+        <pre><span class="cm"># .gitignore — already included in the repo</span>
+.env
+*.pem          <span class="cm"># your RSA public key for disbursement</span></pre>
+      </div>
+    </div>
+  </div>
+
+  <div style="margin-top:2px; background:var(--bg2); border:1px solid var(--border); padding:20px 28px; display:flex; gap:16px; align-items:flex-start;">
+    <span style="color:var(--amber); font-size:1.2rem; flex-shrink:0;">⚠</span>
+    <div>
+      <p style="font-size:0.875rem; color:var(--text); font-weight:600; margin-bottom:4px;">Production deployments</p>
+      <p style="font-size:0.85rem; color:var(--muted);">On servers and CI/CD pipelines, skip <code>.env</code> files entirely. Set <code>AIRTEL_CLIENT_ID</code> and <code>AIRTEL_CLIENT_SECRET</code> as native environment variables or secrets (e.g. GitHub Actions Secrets, Railway variables, Render environment). <code>os.environ[...]</code> picks them up automatically — no code changes needed.</p>
+    </div>
   </div>
 </section>
 
