@@ -1,6 +1,7 @@
 # pyairtel
 
-![image](./pyairtel.png)
+<img width="1024" height="1024" alt="pyairtel" src="https://github.com/user-attachments/assets/59ce4228-b70e-4f7c-aee6-02bac24972fe" />
+
 
 [![PyPI version](https://img.shields.io/pypi/v/pyairtel?color=green)](https://pypi.org/project/pyairtel/)
 [![Python versions](https://img.shields.io/pypi/pyversions/pyairtel)](https://pypi.org/project/pyairtel/)
