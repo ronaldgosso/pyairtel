@@ -22,7 +22,7 @@ from .exceptions import (
     decode_esb_error,
 )
 
-__version__ = "0.1.0"
+__version__ = "0.1.1"
 __author__ = "Ronald Isack Gosso"
 __email__ = "ronaldgosso@gmail.com"
 
